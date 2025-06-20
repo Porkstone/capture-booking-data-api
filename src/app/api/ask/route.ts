@@ -35,24 +35,58 @@ export async function POST(req: NextRequest) {
       apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
     });
 
-    const results: { question: string; answer: string }[] = [];
-    for (const question of questions) {
-      const contents = [
-        {
-          role: "user",
-          parts: [
-            { text: question },
-            { inlineData: { mimeType, data: base64Image } }
-          ]
-        }
-      ];
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-001',
-        contents,
-      });
-      results.push({ question, answer: response.text ?? '' });
-      logger.info('Gemini answer', { question, answer: response.text ?? '' });
+    // Create a single prompt with all questions
+    const prompt = `This is an array of questions about the image, the image is from a hotel checkout web page. Can you return an array of answers matching the index of the questions?
+
+${JSON.stringify(questions, null, 2)}
+
+Please respond with a JSON array of answers in the same order as the questions. If you cannot find the answer, return an empty string.`;
+
+    const contents = [
+      {
+        role: "user",
+        parts: [
+          { text: prompt },
+          { inlineData: { mimeType, data: base64Image } }
+        ]
+      }
+    ];
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-001',
+      contents,
+    });
+
+    const responseText = response.text ?? '';
+    logger.info('Gemini response', { response: responseText });
+
+    // Try to parse the response as JSON array
+    let answers: string[];
+    try {
+      // Extract JSON array from the response (in case there's additional text)
+      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        answers = JSON.parse(jsonMatch[0]);
+      } else {
+        // If no JSON array found, split by newlines or other delimiters
+        answers = responseText.split('\n').filter(line => line.trim().length > 0);
+      }
+    } catch (parseError) {
+      logger.warn('Failed to parse response as JSON, using raw response', { error: parseError });
+      answers = [responseText];
     }
+
+    // Ensure we have the same number of answers as questions
+    while (answers.length < questions.length) {
+      answers.push('');
+    }
+    answers = answers.slice(0, questions.length);
+
+    const results = questions.map((question, index) => ({
+      question,
+      answer: answers[index] || ''
+    }));
+
     return NextResponse.json({ results }, { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
