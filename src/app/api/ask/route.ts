@@ -86,6 +86,7 @@ Please respond with a JSON array of answers in the same order as the questions. 
       question,
       answer: answers[index] || ''
     }));
+    logger.info('Processed results', { results });
 
     return NextResponse.json({ results }, { status: 200, headers: { 'Access-Control-Allow-Origin': '*' } });
   } catch (error: unknown) {
