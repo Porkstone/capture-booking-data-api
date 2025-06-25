@@ -34,13 +34,13 @@ export async function GET(req: NextRequest) {
       );
     }
     
-    // Get the file path
+    // Get the file path - files are in the project root (same level as src/)
     const filePath = path.join(process.cwd(), file);
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return NextResponse.json(
-        { error: 'File not found' },
+        { error: `File not found: ${filePath}` },
         { status: 404 }
       );
     }

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import styles from "./page.module.css";
 
 export default function Home() {
@@ -55,32 +56,32 @@ console.log(result.results);`}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>📚 Documentation</h2>
           <div className={styles.docsGrid}>
-            <a href="/api/docs?file=API_DOCUMENTATION.md" className={styles.docCard}>
+            <Link href="/docs" className={styles.docCard}>
+              <div className={styles.docIcon}>📚</div>
+              <h3>Documentation Hub</h3>
+              <p>Interactive documentation viewer with all API guides and examples</p>
+              <span className={styles.docLink}>View Documentation Hub →</span>
+            </Link>
+            
+            <a href="/API_DOCUMENTATION.md" className={styles.docCard} target="_blank" rel="noopener noreferrer">
               <div className={styles.docIcon}>📖</div>
               <h3>API Documentation</h3>
               <p>Comprehensive guide with examples, best practices, and troubleshooting</p>
               <span className={styles.docLink}>View Documentation →</span>
             </a>
             
-            <a href="/api/docs?file=openapi.yaml" className={styles.docCard}>
+            <a href="/openapi.yaml" className={styles.docCard} target="_blank" rel="noopener noreferrer">
               <div className={styles.docIcon}>🔧</div>
               <h3>OpenAPI Specification</h3>
               <p>Machine-readable API specification with schemas and examples</p>
               <span className={styles.docLink}>View Specification →</span>
             </a>
             
-            <a href="/api/docs?file=test-api.js" className={styles.docCard}>
+            <a href="/test-api.js" className={styles.docCard} target="_blank" rel="noopener noreferrer">
               <div className={styles.docIcon}>🧪</div>
               <h3>Testing Utility</h3>
               <p>JavaScript utility for testing the API with various scenarios</p>
               <span className={styles.docLink}>View Tests →</span>
-            </a>
-            
-            <a href="/api/docs?file=src/types/api.ts" className={styles.docCard}>
-              <div className={styles.docIcon}>📝</div>
-              <h3>TypeScript Types</h3>
-              <p>Complete interface definitions for type safety</p>
-              <span className={styles.docLink}>View Types →</span>
             </a>
           </div>
         </div>
@@ -158,15 +159,17 @@ def analyze_booking(image_path, questions):
           <h2>Ready to get started?</h2>
           <p>Set up your environment and start analyzing booking screenshots</p>
           <div className={styles.ctas}>
-            <a
+            <Link
+              href="/docs"
               className={styles.primary}
-              href="/api/docs?file=API_DOCUMENTATION.md"
             >
-              📖 Read Full Documentation
-            </a>
+              📚 View Documentation Hub
+            </Link>
             <a
-              href="/api/docs?file=test-api.js"
+              href="/test-api.js"
               className={styles.secondary}
+              target="_blank"
+              rel="noopener noreferrer"
             >
               🧪 Run Tests
             </a>
@@ -182,9 +185,10 @@ def analyze_booking(image_path, questions):
           </div>
           <div className={styles.footerSection}>
             <h4>Documentation</h4>
-            <a href="/api/docs?file=API_DOCUMENTATION.md">API Guide</a>
-            <a href="/api/docs?file=openapi.yaml">OpenAPI Spec</a>
-            <a href="/api/docs?file=test-api.js">Testing</a>
+            <Link href="/docs">Documentation Hub</Link>
+            <a href="/API_DOCUMENTATION.md" target="_blank" rel="noopener noreferrer">API Guide</a>
+            <a href="/openapi.yaml" target="_blank" rel="noopener noreferrer">OpenAPI Spec</a>
+            <a href="/test-api.js" target="_blank" rel="noopener noreferrer">Testing</a>
           </div>
           <div className={styles.footerSection}>
             <h4>Resources</h4>
