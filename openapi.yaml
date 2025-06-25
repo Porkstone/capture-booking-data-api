@@ -1,0 +1,261 @@
+openapi: 3.0.3
+info:
+  title: Capture Booking Data API
+  description: |
+    An API for extracting booking information from hotel checkout web page screenshots using Google's Gemini AI.
+    
+    This API allows you to upload an image of a hotel checkout page and ask specific questions about the booking data.
+    The AI will analyze the image and return structured answers to your questions.
+    
+    ## Use Cases
+    - Extract booking confirmation numbers from screenshots
+    - Parse hotel names, dates, and guest information
+    - Extract pricing and payment details
+    - Analyze booking status and reservation details
+    
+    ## Authentication
+    This API requires a Google Generative AI API key to be configured on the server side.
+    
+    ## Rate Limits
+    Please be mindful of Google's Gemini API rate limits and usage quotas.
+    
+    ## Error Handling
+    The API returns appropriate HTTP status codes and error messages for various failure scenarios.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://your-production-domain.com
+    description: Production server
+
+paths:
+  /api/ask:
+    post:
+      summary: Analyze hotel checkout screenshot and answer questions
+      description: |
+        Upload an image of a hotel checkout web page and provide an array of questions.
+        The API will use Google's Gemini AI to analyze the image and return answers to each question.
+        
+        ## Image Requirements
+        - Supported formats: PNG, JPEG, GIF, WebP
+        - Maximum file size: 10MB
+        - Image should be clear and readable
+        - Screenshot should be of a hotel checkout/booking confirmation page
+        
+        ## Question Guidelines
+        - Ask specific, clear questions
+        - Questions should be about visible text/data in the image
+        - Avoid questions requiring external knowledge or context
+        - Examples of good questions:
+          - "What is the booking confirmation number?"
+          - "What is the hotel name?"
+          - "What are the check-in and check-out dates?"
+          - "What is the total price?"
+          - "What is the guest name?"
+        
+        ## Response Format
+        The API returns an array of question-answer pairs, maintaining the same order as the input questions.
+        If an answer cannot be found in the image, an empty string is returned for that question.
+      operationId: analyzeBookingScreenshot
+      tags:
+        - Booking Analysis
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - questions
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: |
+                    The screenshot image file to analyze.
+                    Should be a clear image of a hotel checkout or booking confirmation page.
+                    Supported formats: PNG, JPEG, GIF, WebP
+                    Maximum size: 10MB
+                  example: "booking_screenshot.png"
+                questions:
+                  type: string
+                  description: |
+                    JSON string containing an array of questions to ask about the image.
+                    Each question should be a string that can be answered by analyzing the visible content.
+                  example: '["What is the booking confirmation number?", "What is the hotel name?", "What are the check-in and check-out dates?"]'
+            encoding:
+              file:
+                contentType: image/png, image/jpeg, image/gif, image/webp
+      responses:
+        '200':
+          description: |
+            Successful analysis. Returns an array of question-answer pairs.
+            Each answer corresponds to the question at the same index in the input array.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    description: Array of question-answer pairs
+                    items:
+                      type: object
+                      required:
+                        - question
+                        - answer
+                      properties:
+                        question:
+                          type: string
+                          description: The original question that was asked
+                          example: "What is the booking confirmation number?"
+                        answer:
+                          type: string
+                          description: |
+                            The answer extracted from the image.
+                            Empty string if the answer could not be found or determined.
+                          example: "BK123456789"
+              examples:
+                success:
+                  summary: Successful analysis with multiple questions
+                  value:
+                    results:
+                      - question: "What is the booking confirmation number?"
+                        answer: "BK123456789"
+                      - question: "What is the hotel name?"
+                        answer: "Grand Hotel & Spa"
+                      - question: "What are the check-in and check-out dates?"
+                        answer: "Check-in: March 15, 2024, Check-out: March 18, 2024"
+                      - question: "What is the total price?"
+                        answer: "$450.00"
+                      - question: "What is the guest name?"
+                        answer: "John Smith"
+                partial_success:
+                  summary: Partial success with some unanswered questions
+                  value:
+                    results:
+                      - question: "What is the booking confirmation number?"
+                        answer: "BK123456789"
+                      - question: "What is the hotel name?"
+                        answer: "Grand Hotel & Spa"
+                      - question: "What is the room number?"
+                        answer: ""
+                      - question: "What is the total price?"
+                        answer: "$450.00"
+        '400':
+          description: |
+            Bad request. Missing required parameters or invalid input.
+            Common causes:
+            - Missing file upload
+            - Missing questions parameter
+            - Invalid JSON format for questions
+            - Unsupported file format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing what went wrong
+              examples:
+                missing_file:
+                  summary: Missing file upload
+                  value:
+                    error: "Missing file or questions"
+                invalid_questions:
+                  summary: Invalid questions format
+                  value:
+                    error: "Invalid JSON format for questions parameter"
+        '500':
+          description: |
+            Internal server error. Something went wrong on the server side.
+            Common causes:
+            - Google Gemini API errors
+            - Image processing failures
+            - Network connectivity issues
+            - Invalid API key configuration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the internal error
+              examples:
+                gemini_error:
+                  summary: Gemini API error
+                  value:
+                    error: "Failed to generate content: Invalid API key"
+                processing_error:
+                  summary: Image processing error
+                  value:
+                    error: "Failed to process image: Unsupported format"
+
+components:
+  schemas:
+    QuestionAnswer:
+      type: object
+      required:
+        - question
+        - answer
+      properties:
+        question:
+          type: string
+          description: The question that was asked about the image
+          example: "What is the booking confirmation number?"
+        answer:
+          type: string
+          description: The answer extracted from the image, or empty string if not found
+          example: "BK123456789"
+    
+    AnalysisResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuestionAnswer'
+          description: Array of question-answer pairs from the analysis
+    
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Missing file or questions"
+
+  examples:
+    SampleQuestions:
+      summary: Example questions for hotel booking analysis
+      value:
+        - "What is the booking confirmation number?"
+        - "What is the hotel name?"
+        - "What are the check-in and check-out dates?"
+        - "What is the guest name?"
+        - "What is the room type?"
+        - "What is the total price?"
+        - "What is the payment method?"
+        - "What is the booking status?"
+        - "What is the cancellation policy?"
+        - "What is the hotel address?"
+
+tags:
+  - name: Booking Analysis
+    description: |
+      Endpoints for analyzing hotel booking screenshots and extracting structured data.
+      These endpoints use Google's Gemini AI to understand and extract information from images. 
